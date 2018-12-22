@@ -1,15 +1,14 @@
 package org.usadellab.trimmomatic.trim;
 
-import org.usadellab.trimmomatic.util.Logger;
+import org.apache.log4j.Logger;
 
 import java.io.IOException;
 
 
 public class TrimmerFactory {
-    Logger logger;
+    private static final Logger logger = Logger.getLogger(TrimmerFactory.class);
 
-    public TrimmerFactory(Logger logger) {
-        this.logger = logger;
+    public TrimmerFactory() {
     }
 
     public Trimmer makeTrimmer(String desc) throws IOException {
@@ -25,7 +24,7 @@ public class TrimmerFactory {
         }
 
         if (trimmerName.equals("ILLUMINACLIP"))
-            return IlluminaClippingTrimmer.makeIlluminaClippingTrimmer(logger, args);
+            return IlluminaClippingTrimmer.makeIlluminaClippingTrimmer(args);
 
         if (trimmerName.equals("LEADING"))
             return new LeadingTrimmer(args);

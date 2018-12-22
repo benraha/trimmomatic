@@ -1,19 +1,18 @@
 package org.usadellab.trimmomatic.fastq;
 
-import org.usadellab.trimmomatic.util.Logger;
+import org.apache.log4j.Logger;
 
 import java.util.Collection;
 import java.util.Iterator;
 
 public class PairingValidator {
-    private Logger logger;
+    private static final Logger logger = Logger.getLogger(PairingValidator.class);
+
 
     private boolean complainedAlready;
     private long offset;
 
-    public PairingValidator(Logger logger) {
-        this.logger = logger;
-
+    public PairingValidator() {
         complainedAlready = false;
         offset = 0;
     }
@@ -58,9 +57,9 @@ public class PairingValidator {
                 if (!validateNames(name1, name2)) {
                     if (!complainedAlready) {
                         complainedAlready = true;
-                        logger.warnln("WARNING: Pair validation failed at record: " + offset);
-                        logger.warnln("         Forward read: " + name1);
-                        logger.warnln("         Reverse read: " + name2);
+                        logger.warn("WARNING: Pair validation failed at record: " + offset);
+                        logger.warn("         Forward read: " + name1);
+                        logger.warn("         Reverse read: " + name2);
                     }
 
                     return false;
@@ -69,9 +68,9 @@ public class PairingValidator {
                 if (!complainedAlready) {
                     complainedAlready = true;
                     String name1 = rec1.getName();
-                    logger.warnln("WARNING: Pair validation failed at record: " + offset);
-                    logger.warnln("         Forward read: " + name1);
-                    logger.warnln("         No more reverse reads");
+                    logger.warn("WARNING: Pair validation failed at record: " + offset);
+                    logger.warn("         Forward read: " + name1);
+                    logger.warn("         No more reverse reads");
                 }
                 return false;
 
@@ -80,9 +79,9 @@ public class PairingValidator {
             if (!complainedAlready) {
                 complainedAlready = true;
                 String name2 = rec2.getName();
-                logger.warnln("WARNING: Pair validation failed at record: " + offset);
-                logger.warnln("         No more forward reads");
-                logger.warnln("         Reverse read: " + name2);
+                logger.warn("WARNING: Pair validation failed at record: " + offset);
+                logger.warn("         No more forward reads");
+                logger.warn("         Reverse read: " + name2);
             }
 
             return false;

@@ -1,8 +1,8 @@
 package org.usadellab.trimmomatic;
 
+import org.apache.log4j.Logger;
 import org.usadellab.trimmomatic.trim.Trimmer;
 import org.usadellab.trimmomatic.trim.TrimmerFactory;
-import org.usadellab.trimmomatic.util.Logger;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -11,6 +11,9 @@ import java.util.*;
 public class Trimmomatic {
     private static final int MAX_AUTO_THREADS_THRESHOLD = 8;
     private static final int MAX_AUTO_THREADS_ALLOC = 4;
+
+    private static final Logger logger = Logger.getLogger(Trimmomatic.class);
+
 
     static void showVersion() {
         try {
@@ -39,8 +42,8 @@ public class Trimmomatic {
     }
 
 
-    static Trimmer[] createTrimmers(Logger logger, Iterator<String> nonOptionArgsIter) throws IOException {
-        TrimmerFactory fac = new TrimmerFactory(logger);
+    static Trimmer[] createTrimmers(Iterator<String> nonOptionArgsIter) throws IOException {
+        TrimmerFactory fac = new TrimmerFactory();
 
         List<Trimmer> trimmerList = new ArrayList<Trimmer>();
         while (nonOptionArgsIter.hasNext())
@@ -74,12 +77,12 @@ public class Trimmomatic {
         }
 
         if (showUsage) {
-            System.err.println("Usage: ");
-            System.err.println("       PE [-version] [-threads <threads>] [-phred33|-phred64] [-trimlog <trimLogFile>] [-summary <statsSummaryFile>] [-quiet] [-validatePairs] [-basein <inputBase> | <inputFile1> <inputFile2>] [-baseout <outputBase> | <outputFile1P> <outputFile1U> <outputFile2P> <outputFile2U>] <trimmer1>...");
-            System.err.println("   or: ");
-            System.err.println("       SE [-version] [-threads <threads>] [-phred33|-phred64] [-trimlog <trimLogFile>] [-summary <statsSummaryFile>] [-quiet] <inputFile> <outputFile> <trimmer1>...");
-            System.err.println("   or: ");
-            System.err.println("       -version");
+            logger.error("Usage: ");
+            logger.error("       PE [-version] [-threads <threads>] [-phred33|-phred64] [-trimlog <trimLogFile>] [-summary <statsSummaryFile>] [-quiet] [-validatePairs] [-basein <inputBase> | <inputFile1> <inputFile2>] [-baseout <outputBase> | <outputFile1P> <outputFile1U> <outputFile2P> <outputFile2U>] <trimmer1>...");
+            logger.error("   or: ");
+            logger.error("       SE [-version] [-threads <threads>] [-phred33|-phred64] [-trimlog <trimLogFile>] [-summary <statsSummaryFile>] [-quiet] <inputFile> <outputFile> <trimmer1>...");
+            logger.error("   or: ");
+            logger.error("       -version");
             System.exit(1);
         }
     }

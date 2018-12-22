@@ -1,12 +1,14 @@
 package org.usadellab.trimmomatic;
 
+import org.apache.log4j.Level;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 import org.usadellab.trimmomatic.fastq.FastqParser;
 import org.usadellab.trimmomatic.fastq.FastqRecord;
 import org.usadellab.trimmomatic.fastq.FastqSerializer;
 import org.usadellab.trimmomatic.fastq.PairingValidator;
 import org.usadellab.trimmomatic.threading.*;
 import org.usadellab.trimmomatic.trim.Trimmer;
-import org.usadellab.trimmomatic.util.Logger;
 
 import java.io.File;
 import java.io.IOException;
@@ -34,10 +36,11 @@ public class TrimmomaticPE extends Trimmomatic {
      * MINLEN:<LENGTH> Drop the read if less than specified length
      */
 
-    private Logger logger;
+    private static final Logger logger = Logger.getLogger(TrimmomaticPE.class);
 
-    public TrimmomaticPE(Logger logger) {
-        this.logger = logger;
+
+    public TrimmomaticPE() {
+
     }
 
     private static int getFileExtensionIndex(String str) {
@@ -113,7 +116,6 @@ public class TrimmomaticPE extends Trimmomatic {
 
         boolean badOption = false;
         boolean validatePairs = false;
-        boolean quiet = false;
         boolean showVersion = false;
 
         File trimLog = null;
@@ -154,7 +156,7 @@ public class TrimmomaticPE extends Trimmomatic {
                 } else if (arg.equals("-validatePairs"))
                     validatePairs = true;
                 else if (arg.equals("-quiet"))
-                    quiet = true;
+                    LogManager.getRootLogger().setLevel(Level.ERROR);
                 else if (arg.equals("-version"))
                     showVersion = true;
                 else {
@@ -174,18 +176,15 @@ public class TrimmomaticPE extends Trimmomatic {
         if ((nonOptionArgs.size() < additionalArgs) || badOption)
             return showVersion;
 
-        Logger logger = new Logger(true, true, !quiet);
 
-
-        logger.infoln("TrimmomaticPE: Started with arguments:");
+        logger.info("TrimmomaticPE: Started with arguments:");
         for (String arg : args)
             logger.info(" " + arg);
-        logger.infoln();
 
         if (threads == 0) {
             threads = calcAutoThreadCount();
             if (threads > 1)
-                logger.infoln("Multiple cores found: Using " + threads + " threads");
+                logger.info("Multiple cores found: Using " + threads + " threads");
         }
 
 
@@ -196,11 +195,11 @@ public class TrimmomaticPE extends Trimmomatic {
         if (templateInput != null) {
             inputs = calculateTemplatedInput(templateInput);
             if (inputs == null) {
-                logger.errorln("Unable to determine input files from: " + templateInput);
+                logger.error("Unable to determine input files from: " + templateInput);
                 System.exit(1);
             }
 
-            logger.infoln("Using templated Input files: " + inputs[0] + " " + inputs[1]);
+            logger.info("Using templated Input files: " + inputs[0] + " " + inputs[1]);
         } else {
             inputs = new File[2];
             inputs[0] = new File(nonOptionArgsIter.next());
@@ -214,7 +213,7 @@ public class TrimmomaticPE extends Trimmomatic {
                 System.exit(1);
             }
 
-            logger.infoln("Using templated Output files: " + outputs[0] + " " + outputs[1] + " " + outputs[2] + " " + outputs[3]);
+            logger.info("Using templated Output files: " + outputs[0] + " " + outputs[1] + " " + outputs[2] + " " + outputs[3]);
         } else {
             outputs = new File[4];
             outputs[0] = new File(nonOptionArgsIter.next());
@@ -223,13 +222,13 @@ public class TrimmomaticPE extends Trimmomatic {
             outputs[3] = new File(nonOptionArgsIter.next());
         }
 
-        Trimmer trimmers[] = createTrimmers(logger, nonOptionArgsIter);
+        Trimmer trimmers[] = createTrimmers(nonOptionArgsIter);
 
-        TrimmomaticPE tm = new TrimmomaticPE(logger);
+        TrimmomaticPE tm = new TrimmomaticPE();
         tm.process(inputs[0], inputs[1], outputs[0], outputs[1], outputs[2], outputs[3],
                 trimmers, phredOffset, trimLog, statsSummary, validatePairs, threads);
 
-        logger.infoln("TrimmomaticPE: Completed successfully");
+        logger.info("TrimmomaticPE: Completed successfully");
         return true;
     }
 
@@ -259,7 +258,7 @@ public class TrimmomaticPE extends Trimmomatic {
                 try {
                     recs = trimmers[i].processRecords(recs);
                 } catch (RuntimeException e) {
-                    logger.errorln("Exception processing reads: " + originalRecs[0].getName() + " and "
+                    logger.error("Exception processing reads: " + originalRecs[0].getName() + " and "
                             + originalRecs[1].getName());
                     e.printStackTrace();
                     throw e;
@@ -296,7 +295,7 @@ public class TrimmomaticPE extends Trimmomatic {
             }
         }
 
-        logger.infoln(stats.processStatsPE(statsSummaryStream));
+        logger.info(stats.processStatsPE(statsSummaryStream));
     }
 
     public void processMultiThreaded(FastqParser parser1, FastqParser parser2, FastqSerializer serializer1P,
@@ -389,7 +388,7 @@ public class TrimmomaticPE extends Trimmomatic {
                     pairingValidator.validatePairs(recs1, recs2);
 
                 BlockOfRecords bor = new BlockOfRecords(recs1, recs2);
-                BlockOfWork work = new BlockOfWork(logger, trimmers, bor, true, trimLogStream != null);
+                BlockOfWork work = new BlockOfWork(trimmers, bor, true, trimLogStream != null);
 
                 while (taskQueue.remainingCapacity() < 1)
                     Thread.sleep(100);
@@ -425,7 +424,7 @@ public class TrimmomaticPE extends Trimmomatic {
                 trimLogThread.join();
 
             statsThread.join();
-            logger.infoln(statsWorker.getStats().processStatsPE(statsSummaryStream));
+            logger.info(statsWorker.getStats().processStatsPE(statsSummaryStream));
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
@@ -444,11 +443,11 @@ public class TrimmomaticPE extends Trimmomatic {
             int phred2 = parser2.determinePhredOffset();
 
             if (phred1 == phred2 && phred1 != 0) {
-                logger.infoln("Quality encoding detected as phred" + phred1);
+                logger.info("Quality encoding detected as phred" + phred1);
                 parser1.setPhredOffset(phred1);
                 parser2.setPhredOffset(phred1);
             } else {
-                logger.errorln("Error: Unable to detect quality encoding");
+                logger.error("Error: Unable to detect quality encoding");
                 System.exit(1);
             }
         }
@@ -478,7 +477,7 @@ public class TrimmomaticPE extends Trimmomatic {
         PairingValidator pairingValidator = null;
 
         if (validatePairing)
-            pairingValidator = new PairingValidator(logger);
+            pairingValidator = new PairingValidator();
 
         if (threads == 1)
             processSingleThreaded(parser1, parser2, serializer1P, serializer1U, serializer2P, serializer2U, trimmers,

@@ -1,16 +1,18 @@
 package org.usadellab.trimmomatic.threading;
 
+import org.apache.log4j.Logger;
 import org.usadellab.trimmomatic.TrimStats;
 import org.usadellab.trimmomatic.fastq.FastqRecord;
 import org.usadellab.trimmomatic.trim.Trimmer;
-import org.usadellab.trimmomatic.util.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
 
 public class BlockOfWork implements Callable<BlockOfRecords> {
-    private Logger logger;
+
+    private static final Logger logger = Logger.getLogger(BlockOfWork.class);
+
 
     private Trimmer trimmers[];
     private BlockOfRecords bor;
@@ -18,9 +20,7 @@ public class BlockOfWork implements Callable<BlockOfRecords> {
     private boolean trimLog;
 
 
-    public BlockOfWork(Logger logger, Trimmer trimmers[], BlockOfRecords bor, boolean pe, boolean trimLog) {
-        this.logger = logger;
-
+    public BlockOfWork(Trimmer trimmers[], BlockOfRecords bor, boolean pe, boolean trimLog) {
         this.trimmers = trimmers;
         this.bor = bor;
 
@@ -88,7 +88,7 @@ public class BlockOfWork implements Callable<BlockOfRecords> {
                     try {
                         recs = trimmers[j].processRecords(recs);
                     } catch (RuntimeException e) {
-                        logger.errorln("Exception processing reads: " + originalRecs[0].getName() + " and " + originalRecs[1].getName());
+                        logger.error("Exception processing reads: " + originalRecs[0].getName() + " and " + originalRecs[1].getName());
                         throw e;
                     }
                 }
@@ -150,7 +150,7 @@ public class BlockOfWork implements Callable<BlockOfRecords> {
                     try {
                         recs = trimmers[j].processRecords(recs);
                     } catch (RuntimeException e) {
-                        logger.errorln("Exception processing read: " + originalRecs[0].getName());
+                        logger.error("Exception processing read: " + originalRecs[0].getName());
                         e.printStackTrace();
                         throw e;
                     }
