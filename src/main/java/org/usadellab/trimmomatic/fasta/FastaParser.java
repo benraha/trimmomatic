@@ -1,12 +1,15 @@
 package org.usadellab.trimmomatic.fasta;
 
+import org.apache.log4j.Logger;
+
 import java.io.*;
 
 public class FastaParser {
+    private static final Logger logger = Logger.getLogger(FastaParser.class);
     private BufferedReader reader;
-
     private String currentLine;
     private FastaRecord current;
+
 
     public FastaParser() {
 
@@ -39,8 +42,21 @@ public class FastaParser {
         }
     }
 
-    public void parse(File file) throws IOException {
-        reader = new BufferedReader(new InputStreamReader(new BufferedInputStream(new FileInputStream(file), 1000000)));
+    public void parse(String fileName) throws IOException {
+        File file = new File(fileName);
+//        check if the file is in the file system
+        logger.info("Checking for adapter file " + fileName + "on the file system");
+        if (file.exists()) {
+            reader = new BufferedReader(new FileReader(file), 1000000);
+        } else {
+//     let's try to read it from the classpath
+            logger.info("Checking for adapter file " + fileName + "in the class path");
+            InputStream is = FastaParser.class.getResourceAsStream("/adapters/" + fileName);
+            if (is != null) {
+                reader = new BufferedReader(new InputStreamReader(is));
+            } else
+                throw new FileNotFoundException("Couldn't find the adapter file " + fileName);
+        }
         parseOne();
     }
 

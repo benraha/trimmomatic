@@ -57,7 +57,7 @@ public class IlluminaClippingTrimmer implements Trimmer {
     public static IlluminaClippingTrimmer makeIlluminaClippingTrimmer(String args) throws IOException {
         String arg[] = args.split(":");
 
-        File seqs = new File(arg[0]);
+        String seqs = arg[0];
 
         int seedMaxMiss = Integer.parseInt(arg[1]);
         int minPalindromeLikelihood = Integer.parseInt(arg[2]);
@@ -75,9 +75,10 @@ public class IlluminaClippingTrimmer implements Trimmer {
         IlluminaClippingTrimmer trimmer = new IlluminaClippingTrimmer(seedMaxMiss, minPalindromeLikelihood, minSequenceLikelihood, minPrefix, palindromeKeepBoth);
 
         try {
-            trimmer.loadSequences(seqs.getCanonicalPath());
+            trimmer.loadSequences(seqs);
         } catch (IOException ex) {
-            logger.error(ex.getStackTrace());
+            logger.error(ex.getMessage());
+            ex.printStackTrace();
         }
 
         return trimmer;
@@ -227,7 +228,7 @@ public class IlluminaClippingTrimmer implements Trimmer {
 
     private void loadSequences(String seqPath) throws IOException {
         FastaParser parser = new FastaParser();
-        parser.parse(new File(seqPath));
+        parser.parse(seqPath);
 
         Map<String, FastaRecord> forwardSeqMap = new HashMap<String, FastaRecord>();
         Map<String, FastaRecord> reverseSeqMap = new HashMap<String, FastaRecord>();
