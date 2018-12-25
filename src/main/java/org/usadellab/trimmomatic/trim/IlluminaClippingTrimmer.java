@@ -5,7 +5,6 @@ import org.usadellab.trimmomatic.fasta.FastaParser;
 import org.usadellab.trimmomatic.fasta.FastaRecord;
 import org.usadellab.trimmomatic.fastq.FastqRecord;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
@@ -33,7 +32,7 @@ public class IlluminaClippingTrimmer implements Trimmer {
     private Set<IlluminaClippingSeq> reverseSeqs;
     private Set<IlluminaClippingSeq> commonSeqs;
 
-    public IlluminaClippingTrimmer(int seedMaxMiss, int minPalindromeLikelihood, int minSequenceLikelihood, int minPrefix, boolean palindromeKeepBoth) {
+    public IlluminaClippingTrimmer(int seedMaxMiss, int minPalindromeLikelihood, int minSequenceLikelihood, int minPrefix, boolean palindromeKeepBoth, String seqs) {
 
         this.seedMaxMiss = seedMaxMiss;
         this.minPalindromeLikelihood = minPalindromeLikelihood;
@@ -45,13 +44,20 @@ public class IlluminaClippingTrimmer implements Trimmer {
         // minPalindromeOverlap=(int)(minPalindromeLikelihood/LOG10_4);
         minSequenceOverlap = (int) (minSequenceLikelihood / LOG10_4);
 
-        if (minSequenceOverlap > 15)
-            minSequenceOverlap = 15;
+        minSequenceOverlap = min(minSequenceOverlap, 15);
 
         prefixPairs = new ArrayList<IlluminaPrefixPair>();
         commonSeqs = new HashSet<IlluminaClippingSeq>();
         forwardSeqs = new HashSet<IlluminaClippingSeq>();
         reverseSeqs = new HashSet<IlluminaClippingSeq>();
+
+        try {
+            loadSequences(seqs);
+        } catch (IOException ex) {
+            logger.error(ex.getMessage());
+            ex.printStackTrace();
+        }
+
     }
 
     public static IlluminaClippingTrimmer makeIlluminaClippingTrimmer(String args) throws IOException {
@@ -72,22 +78,11 @@ public class IlluminaClippingTrimmer implements Trimmer {
         if (arg.length > 5)
             palindromeKeepBoth = Boolean.parseBoolean(arg[5]);
 
-        IlluminaClippingTrimmer trimmer = new IlluminaClippingTrimmer(seedMaxMiss, minPalindromeLikelihood, minSequenceLikelihood, minPrefix, palindromeKeepBoth);
-
-        try {
-            trimmer.loadSequences(seqs);
-        } catch (IOException ex) {
-            logger.error(ex.getMessage());
-            ex.printStackTrace();
-        }
-
-        return trimmer;
+        return new IlluminaClippingTrimmer(seedMaxMiss, minPalindromeLikelihood, minSequenceLikelihood, minPrefix, palindromeKeepBoth, seqs);
     }
 
     public static long[] packSeqExternal(String seq) {
-        long out[] = null;
-
-        out = new long[seq.length()];
+        long out[] = new long[seq.length()];
 
         long pack = 0;
 
@@ -133,36 +128,21 @@ public class IlluminaClippingTrimmer implements Trimmer {
     }
 
     public static long[] packSeqInternal(String seq, boolean reverse) {
-        long out[] = null;
+        long out[] = new long[seq.length() - 15];
 
-        if (!reverse) {
-            out = new long[seq.length() - 15];
+        long pack = 0;
 
-            long pack = 0;
-
-            for (int i = 0; i < seq.length(); i++) {
-                int tmp = packCh(seq.charAt(i), false);
-
+        for (int i = 0; i < seq.length(); i++) {
+            int tmp = packCh(seq.charAt(i), reverse);
+            if (reverse) {
+                pack = (pack >>> 4) | tmp << 60;
+            } else
                 pack = (pack << 4) | tmp;
 
-                if (i >= 15)
-                    out[i - 15] = pack;
-            }
-        } else {
-            out = new long[seq.length() - 15];
-
-            long pack = 0;
-
-            for (int i = 0; i < seq.length(); i++) {
-                long tmp = packCh(seq.charAt(i), true);
-
-                pack = (pack >>> 4) | tmp << 60;
-
-                if (i >= 15)
-                    out[i - 15] = pack;
-            }
-
+            if (i >= 15)
+                out[i - 15] = pack;
         }
+
 
         return out;
     }
@@ -191,7 +171,7 @@ public class IlluminaClippingTrimmer implements Trimmer {
                     break;
 
                 default:
-                    sb.append("[" + tmp + "]");
+                    sb.append("[").append(tmp).append("]");
             }
             pack <<= 4;
         }
@@ -283,10 +263,6 @@ public class IlluminaClippingTrimmer implements Trimmer {
                 + " forward/reverse sequences, " + forwardSeqs.size() + " forward only sequences, "
                 + reverseSeqs.size() + " reverse only sequences");
 
-    }
-
-    void addPrefixPair(String prefix1, String prefix2) {
-        prefixPairs.add(new IlluminaPrefixPair(prefix1, prefix2));
     }
 
     void addClippingSeq(IlluminaClippingSeq clippingSeq, boolean forward, boolean reverse) {
@@ -422,9 +398,7 @@ public class IlluminaClippingTrimmer implements Trimmer {
             int length2 = prefix2.length();
 
             if (length1 != length2) {
-                int minLength = length1;
-                if (length2 < minLength)
-                    minLength = length2;
+                int minLength = min(length1, length2);
 
                 prefix1 = prefix1.substring(length1 - minLength);
                 prefix2 = prefix2.substring(length2 - minLength);

@@ -133,9 +133,9 @@ public class TrimmomaticSE extends Trimmomatic {
         while (parser.hasNext()) {
             originalRecs[0] = recs[0] = parser.next();
 
-            for (int i = 0; i < trimmers.length; i++) {
+            for (Trimmer trimmer : trimmers) {
                 try {
-                    recs = trimmers[i].processRecords(recs);
+                    recs = trimmer.processRecords(recs);
                 } catch (RuntimeException e) {
                     logger.error("Exception processing read: " + originalRecs[0].getName());
                     throw e;

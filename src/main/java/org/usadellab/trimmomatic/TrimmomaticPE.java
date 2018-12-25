@@ -254,9 +254,9 @@ public class TrimmomaticPE extends Trimmomatic {
             if (pairingValidator != null)
                 pairingValidator.validatePair(recs[0], recs[1]);
 
-            for (int i = 0; i < trimmers.length; i++) {
+            for (Trimmer trimmer : trimmers) {
                 try {
-                    recs = trimmers[i].processRecords(recs);
+                    recs = trimmer.processRecords(recs);
                 } catch (RuntimeException e) {
                     logger.error("Exception processing reads: " + originalRecs[0].getName() + " and "
                             + originalRecs[1].getName());
