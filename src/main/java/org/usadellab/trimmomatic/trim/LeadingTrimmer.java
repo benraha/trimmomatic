@@ -16,12 +16,11 @@ public class LeadingTrimmer extends AbstractSingleRecordTrimmer {
 
     @Override
     public FastqRecord processRecord(FastqRecord in) {
-        String seq = in.getSequence();
         int quals[] = in.getQualityAsInteger(true);
 
-        for (int i = 0; i < seq.length(); i++) {
+        for (int i = 0; i < quals.length; i++) {
             if (quals[i] >= qual)
-                return new FastqRecord(in, i, seq.length() - i);
+                return new FastqRecord(in, i, quals.length - i);
         }
 
         return null;

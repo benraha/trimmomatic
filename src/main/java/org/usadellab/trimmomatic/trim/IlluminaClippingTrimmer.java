@@ -341,43 +341,8 @@ public class IlluminaClippingTrimmer implements Trimmer {
         }
 
         // Also check each record for other nasties
-
-        if (forwardRec != null) {
-            if (toKeepForward == null || toKeepForward > 0) {
-                for (IlluminaClippingSeq seq : forwardSeqs)
-                    toKeepForward = min(toKeepForward, seq.readsSeqCompare(forwardRec));
-
-                for (IlluminaClippingSeq seq : commonSeqs)
-                    toKeepForward = min(toKeepForward, seq.readsSeqCompare(forwardRec));
-            }
-
-            // Keep the minimum
-
-            if (toKeepForward != null) {
-                if (toKeepForward > 0)
-                    forwardRec = new FastqRecord(forwardRec, 0, toKeepForward);
-                else
-                    forwardRec = null;
-            }
-        }
-
-        if (reverseRec != null) {
-            if (toKeepReverse == null || toKeepReverse > 0) {
-                for (IlluminaClippingSeq seq : reverseSeqs)
-                    toKeepReverse = min(toKeepReverse, seq.readsSeqCompare(reverseRec));
-
-                for (IlluminaClippingSeq seq : commonSeqs)
-                    toKeepReverse = min(toKeepReverse, seq.readsSeqCompare(reverseRec));
-            }
-            // Keep the minimum
-
-            if (toKeepReverse != null) {
-                if (toKeepReverse > 0)
-                    reverseRec = new FastqRecord(reverseRec, 0, toKeepReverse);
-                else
-                    reverseRec = null;
-            }
-        }
+        forwardRec = removeIlluminaAdapters(forwardRec, toKeepForward, forwardSeqs);
+        reverseRec = removeIlluminaAdapters(forwardRec, toKeepReverse, reverseSeqs);
 
         if (in.length == 2)
             return new FastqRecord[]{forwardRec, reverseRec};
@@ -385,6 +350,28 @@ public class IlluminaClippingTrimmer implements Trimmer {
             return new FastqRecord[]{forwardRec};
 
         return new FastqRecord[0];
+    }
+
+    FastqRecord removeIlluminaAdapters(FastqRecord record, Integer toKeep, Set<IlluminaClippingSeq> seqsToCheck) {
+        if (record != null) {
+            if (toKeep == null || toKeep > 0) {
+                for (IlluminaClippingSeq seq : seqsToCheck)
+                    toKeep = min(toKeep, seq.readsSeqCompare(record));
+
+                for (IlluminaClippingSeq seq : commonSeqs)
+                    toKeep = min(toKeep, seq.readsSeqCompare(record));
+            }
+
+            // Keep the minimum
+            if (toKeep != null) {
+                if (toKeep > 0)
+                    return new FastqRecord(record, 0, toKeep);
+                else
+                    return null;
+            }
+        }
+
+        return record;
     }
 
     class IlluminaPrefixPair {
