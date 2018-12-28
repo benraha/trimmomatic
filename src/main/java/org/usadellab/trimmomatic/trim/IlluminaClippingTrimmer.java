@@ -6,6 +6,7 @@ import org.usadellab.trimmomatic.fasta.FastaRecord;
 import org.usadellab.trimmomatic.fastq.FastqRecord;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.*;
 
 public class IlluminaClippingTrimmer implements Trimmer {
@@ -374,7 +375,7 @@ public class IlluminaClippingTrimmer implements Trimmer {
         return record;
     }
 
-    class IlluminaPrefixPair {
+    class IlluminaPrefixPair implements Serializable {
         private String prefix1;
         private String prefix2;
 
@@ -539,7 +540,7 @@ public class IlluminaClippingTrimmer implements Trimmer {
         }
     }
 
-    abstract class IlluminaClippingSeq {
+    abstract class IlluminaClippingSeq implements Serializable {
         String seq;
         long pack[];
 

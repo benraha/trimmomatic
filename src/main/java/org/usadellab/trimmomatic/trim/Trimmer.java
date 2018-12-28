@@ -2,6 +2,8 @@ package org.usadellab.trimmomatic.trim;
 
 import org.usadellab.trimmomatic.fastq.FastqRecord;
 
-public interface Trimmer {
+import java.io.Serializable;
+
+public interface Trimmer extends Serializable{
     public FastqRecord[] processRecords(FastqRecord in[]);
 }
