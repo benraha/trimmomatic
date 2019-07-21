@@ -343,7 +343,7 @@ public class IlluminaClippingTrimmer implements Trimmer {
 
         // Also check each record for other nasties
         forwardRec = removeIlluminaAdapters(forwardRec, toKeepForward, forwardSeqs);
-        reverseRec = removeIlluminaAdapters(forwardRec, toKeepReverse, reverseSeqs);
+        reverseRec = removeIlluminaAdapters(reverseRec, toKeepReverse, reverseSeqs);
 
         if (in.length == 2)
             return new FastqRecord[]{forwardRec, reverseRec};
