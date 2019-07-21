@@ -3,15 +3,21 @@ package org.usadellab.trimmomatic.trim;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
 
 
 public class TrimmerFactory {
     private static final Logger logger = Logger.getLogger(TrimmerFactory.class);
 
-    public TrimmerFactory() {
-    }
+    public static final String multiTrimmerConfigDelimiter = ";;;";
 
-    public Trimmer makeTrimmer(String desc) throws IOException {
+    public static Trimmer makeTrimmer(String desc) throws IOException {
+
+        logger.info("Creating trimmer with args " + desc);
+
         String trimmerName = desc;
         String args = "";
 
@@ -67,4 +73,21 @@ public class TrimmerFactory {
 
         throw new RuntimeException("Unknown trimmer: " + trimmerName);
     }
+
+    public static Trimmer[] createTrimmers(Iterator<String> nonOptionArgsIter) throws IOException {
+        List<Trimmer> trimmerList = new ArrayList<>();
+        while (nonOptionArgsIter.hasNext())
+            trimmerList.add(makeTrimmer(nonOptionArgsIter.next()));
+
+        Trimmer[] trimmers = trimmerList.toArray(new Trimmer[0]);
+
+        logger.info("Found " + trimmerList.size() + " trimmers from config");
+
+        return trimmers;
+    }
+
+    public static Trimmer[] createTrimmers(String trimmersDefinition) throws IOException {
+        return createTrimmers(Arrays.asList(trimmersDefinition.split(multiTrimmerConfigDelimiter)).iterator());
+    }
+
 }

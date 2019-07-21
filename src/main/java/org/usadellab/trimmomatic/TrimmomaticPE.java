@@ -9,6 +9,7 @@ import org.usadellab.trimmomatic.fastq.FastqSerializer;
 import org.usadellab.trimmomatic.fastq.PairingValidator;
 import org.usadellab.trimmomatic.threading.*;
 import org.usadellab.trimmomatic.trim.Trimmer;
+import org.usadellab.trimmomatic.trim.TrimmerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -222,7 +223,7 @@ public class TrimmomaticPE extends Trimmomatic {
             outputs[3] = new File(nonOptionArgsIter.next());
         }
 
-        Trimmer trimmers[] = createTrimmers(nonOptionArgsIter);
+        Trimmer trimmers[] = TrimmerFactory.createTrimmers(nonOptionArgsIter);
 
         TrimmomaticPE tm = new TrimmomaticPE();
         tm.process(inputs[0], inputs[1], outputs[0], outputs[1], outputs[2], outputs[3],

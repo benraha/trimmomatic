@@ -8,6 +8,7 @@ import org.usadellab.trimmomatic.fastq.FastqRecord;
 import org.usadellab.trimmomatic.fastq.FastqSerializer;
 import org.usadellab.trimmomatic.threading.*;
 import org.usadellab.trimmomatic.trim.Trimmer;
+import org.usadellab.trimmomatic.trim.TrimmerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -106,7 +107,7 @@ public class TrimmomaticSE extends Trimmomatic {
         File input = new File(nonOptionArgsIter.next());
         File output = new File(nonOptionArgsIter.next());
 
-        Trimmer trimmers[] = createTrimmers(nonOptionArgsIter);
+        Trimmer trimmers[] = TrimmerFactory.createTrimmers(nonOptionArgsIter);
 
         TrimmomaticSE tm = new TrimmomaticSE();
         tm.process(input, output, trimmers, phredOffset, trimLog, statsSummary, threads);
